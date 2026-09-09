@@ -42,20 +42,27 @@ struct ToolbarPlaygroundView: View {
 
     // MARK: - Stage
 
+    // The list fills the whole stage and both chrome pieces float on top of
+    // it, exactly like ToolbarCondenseView/TabBarMiniPlayerView — the glass
+    // needs real content scrolling underneath it to actually blur, or it
+    // just renders as a flat tinted shape with nothing behind it.
     private var stage: some View {
-        VStack(spacing: 0) {
-            titleBar
-            Divider()
-            ScrollView {
-                VStack(spacing: 10) {
-                    ForEach(0..<6, id: \.self) { i in fakeRow(i) }
-                }
-                .padding(12)
+        ScrollView {
+            VStack(spacing: 10) {
+                Color.clear.frame(height: 52)
+                ForEach(0..<10, id: \.self) { i in fakeRow(i) }
+                Color.clear.frame(height: 70)
             }
-            chromeBar
+            .padding(.horizontal, 12)
         }
         .frame(height: 300)
         .background(Color(.systemBackground))
+        .overlay(alignment: .top) {
+            titleBar.padding(.horizontal, 12).padding(.top, 10)
+        }
+        .overlay(alignment: .bottom) {
+            chromeBar
+        }
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -74,45 +81,44 @@ struct ToolbarPlaygroundView: View {
             .font(.subheadline.weight(.medium))
         }
         .padding(.horizontal, 16)
-        .frame(height: 44)
+        .frame(height: 40)
+        .glassEffect(chromeGlass, in: .capsule)
         .animation(spring, value: selecting)
     }
 
     private func fakeRow(_ i: Int) -> some View {
         HStack(spacing: 10) {
+            Image(systemName: i < Int(selectedCount) ? "checkmark.circle.fill" : "circle")
+                .foregroundStyle(i < Int(selectedCount) ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
+                .opacity(progress)
+                .frame(width: 22)
             Circle().fill(Color(.systemFill)).frame(width: 30, height: 30)
             VStack(alignment: .leading, spacing: 5) {
                 Capsule().fill(Color(.systemFill)).frame(width: 120, height: 8)
                 Capsule().fill(Color(.quaternarySystemFill)).frame(width: 80, height: 8)
             }
             Spacer()
-            Image(systemName: i < Int(selectedCount) ? "checkmark.circle.fill" : "circle")
-                .foregroundStyle(i < Int(selectedCount) ? AnyShapeStyle(.tint) : AnyShapeStyle(.tertiary))
-                .opacity(progress)
         }
         .padding(10)
         .background(Color(.secondarySystemBackground),
                     in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
+    // Only the tab bar floats as an inset capsule (the real iOS 26 tab bar
+    // shape) — a real .bottomBar toolbar is a full-width bar flush to the
+    // bottom edge, not another floating pill, so the two don't share a shape.
     private var chromeBar: some View {
-        ZStack {
-            switch style {
-            case .crossFade:
-                tabBarMock.opacity(1 - progress)
-                toolbarMock.opacity(progress)
-            case .slideUp:
-                tabBarMock
-                    .opacity(1 - progress)
-                    .offset(y: 24 * progress)
-                toolbarMock
-                    .opacity(progress)
-                    .offset(y: 24 * (1 - progress))
-            }
+        ZStack(alignment: .bottom) {
+            tabBarMock
+                .padding(.horizontal, 12)
+                .padding(.bottom, 10)
+                .opacity(1 - progress)
+                .offset(y: style == .slideUp ? 20 * progress : 0)
+            toolbarMock
+                .opacity(progress)
+                .offset(y: style == .slideUp ? 20 * (1 - progress) : 0)
         }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 10)
-        .frame(height: 64)
+        .frame(height: 74)
     }
 
     private var tabBarMock: some View {
@@ -128,16 +134,19 @@ struct ToolbarPlaygroundView: View {
 
     private var toolbarMock: some View {
         HStack {
+            Spacer()
             Image(systemName: "trash")
             Spacer()
             Image(systemName: "folder")
             Spacer()
             Image(systemName: "square.and.arrow.up")
+            Spacer()
         }
-        .font(.system(size: 16, weight: .medium))
-        .padding(.horizontal, 20)
-        .frame(height: 44)
-        .glassEffect(chromeGlass, in: .capsule)
+        .font(.system(size: 17, weight: .medium))
+        .frame(height: 54)
+        .frame(maxWidth: .infinity)
+        .glassEffect(chromeGlass, in: .rect(cornerRadius: 0))
+        .overlay(alignment: .top) { Divider() }
     }
 
     // MARK: - Controls
