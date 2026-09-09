@@ -2,21 +2,22 @@ import SwiftUI
 
 // Tab bar auto-hide: the reader-chrome pattern Apple News uses. The tab bar
 // only shows at rest — scroll down into an article and it slides away;
-// scroll back up (or stop near the top) and it returns. A floating glass
-// toolbar (back + reactions + share + more) stays pinned the whole time,
-// so it isn't tied to the tab bar's visibility at all.
+// scroll back up (or stop near the top) and it returns. None of that is
+// custom: it's one modifier on a real TabView. The reaction/share/more
+// toolbar above the content is a completely separate, always-visible piece
+// of chrome that isn't tied to the tab bar's visibility at all.
 
 struct TabBarAutoHideView: View {
     var body: some View {
         List {
             Section {
-                Text("News hides its tab bar as you read, not on a timer or a single "
-                     + "scroll-past-a-point rule, but on direction: scroll down and it "
-                     + "slides away within a few points; scroll up — even briefly — and "
-                     + "it's back. Near the very top it never leaves. The back/reaction/"
-                     + "share/more cluster above it is a separate floating toolbar that "
-                     + "doesn't hide at all, so there's always a way out and always a way "
-                     + "to act on what you're reading.")
+                Text("News hides its tab bar as you read: scroll down and it slides "
+                     + "away within a few points; scroll up — even briefly — and it's "
+                     + "back. Near the very top it never leaves. That's system behavior, "
+                     + "not a hand-rolled scroll listener — one modifier on a plain "
+                     + "TabView with ordinary tabs, no dedicated search tab required. "
+                     + "The reaction/share/more toolbar above the article doesn't hide "
+                     + "with it, so there's always a way to act on what you're reading.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.vertical, 4)
@@ -29,7 +30,7 @@ struct TabBarAutoHideView: View {
             } header: {
                 Text("Live Demo")
             } footer: {
-                Text("This hides the app's real tab bar and draws its own — scroll down, then back up.")
+                Text("A real TabView with three plain tabs — open the article, scroll down, then back up.")
             }
 
             Section("How it's built") {
@@ -37,18 +38,20 @@ struct TabBarAutoHideView: View {
                     Text("""
                     TabView {
                         Tab("Today", systemImage: "newspaper") { TodayFeed() }
-                        ...
+                        Tab("Following", systemImage: "star") { FollowingFeed() }
+                        Tab("Audio", systemImage: "headphones") { AudioFeed() }
                     }
                     .tabBarMinimizeBehavior(.onScrollDown)
                     """)
                     .font(.mono(.caption))
                     .padding(8)
                     .background(.quaternary, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                    Text("That's the real, one-line API — it lives on the TabView itself, "
-                         + "so it can't be demonstrated by pushing a nested one inside this "
-                         + "catalog. The live demo above recreates the same feel by hand: it "
-                         + "tracks scroll direction with onScrollGeometryChange and slides its "
-                         + "own fake tab bar in and out to match.")
+                    Text("That's the whole thing — no scroll tracking, no manual "
+                         + "animation, and no role: .search tab, which is what would "
+                         + "detach a search icon into its own floating pill next to the "
+                         + "bar. Inside a tab's own NavigationStack, an ordinary trailing "
+                         + "ToolbarItemGroup gets the glass-pill treatment for free and "
+                         + "is completely unaffected by tabBarMinimizeBehavior.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -73,48 +76,95 @@ struct TabBarAutoHideView: View {
 // MARK: - Live demo
 
 private struct TabBarAutoHideDemo: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var barHidden = false
-
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                Color.clear.frame(height: 56)
-                Text("Trade tensions reach new levels")
-                    .font(.title2.weight(.bold))
-                ForEach(0..<18, id: \.self) { i in
-                    paragraph(i)
+        TabView {
+            Tab("Today", systemImage: "newspaper") {
+                NavigationStack {
+                    TodayFeedDemo()
                 }
             }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 32)
-        }
-        .onScrollGeometryChange(for: CGFloat.self, of: { geo in
-            geo.contentOffset.y + geo.contentInsets.top
-        }, action: { old, new in
-            let delta = new - old
-            if new <= 4 {
-                withAnimation(.snappy(duration: 0.28)) { barHidden = false }
-            } else if delta > 4 {
-                withAnimation(.snappy(duration: 0.28)) { barHidden = true }
-            } else if delta < -4 {
-                withAnimation(.snappy(duration: 0.28)) { barHidden = false }
+            Tab("Following", systemImage: "star") {
+                NavigationStack {
+                    Text("Following").foregroundStyle(.secondary)
+                        .navigationTitle("Following")
+                }
             }
-        })
-        .safeAreaInset(edge: .bottom) {
-            if !barHidden {
-                tabBar
-                    .padding(.bottom, 6)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            Tab("Audio", systemImage: "headphones") {
+                NavigationStack {
+                    Text("Audio").foregroundStyle(.secondary)
+                        .navigationTitle("Audio")
+                }
             }
         }
-        .overlay(alignment: .top) {
-            floatingToolbar.padding(.top, 8)
+        .tabBarMinimizeBehavior(.onScrollDown)
+    }
+}
+
+private struct TodayFeedDemo: View {
+    private let headlines = [
+        "Markets steady after morning selloff",
+        "What the new tariffs mean for shipping",
+        "Five charts on the trade standoff",
+        "Ports brace for a slower fourth quarter",
+    ]
+
+    var body: some View {
+        List {
+            NavigationLink("Trade tensions reach new levels") {
+                ArticleReaderDemo()
+            }
+            ForEach(headlines, id: \.self) { headline in
+                Text(headline)
+            }
         }
-        .background(Color(.systemGroupedBackground))
+        .navigationTitle("Today")
+    }
+}
+
+private struct ArticleReaderDemo: View {
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                hero
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Trade tensions reach new levels")
+                        .font(.title2.weight(.bold))
+                    ForEach(0..<14, id: \.self) { i in paragraph(i) }
+                }
+                .padding(20)
+            }
+        }
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar(.hidden, for: .navigationBar)
-        .toolbar(.hidden, for: .tabBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .toolbar {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                Button { } label: {
+                    Image(systemName: "hand.thumbsup")
+                }
+                Button { } label: {
+                    Image(systemName: "hand.thumbsdown")
+                }
+                ShareLink(item: URL(string: "https://example.com")!)
+                Menu("More") {
+                    Button("Save Article", systemImage: "bookmark") { }
+                    Button("Text Size", systemImage: "textformat.size") { }
+                    Button("Report a Problem", systemImage: "flag") { }
+                }
+            }
+        }
+    }
+
+    private var hero: some View {
+        Rectangle()
+            .fill(
+                LinearGradient(
+                    colors: [Color.accentColor.opacity(0.6), Color.accentColor.opacity(0.15)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
+            .frame(height: 220)
+            .ignoresSafeArea(edges: .top)
     }
 
     private func paragraph(_ i: Int) -> some View {
@@ -123,47 +173,6 @@ private struct TabBarAutoHideDemo: View {
             Capsule().fill(Color(.systemFill)).frame(height: 8)
             Capsule().fill(Color(.quaternarySystemFill)).frame(width: 220, height: 8)
         }
-        .padding(.top, i == 0 ? 4 : 0)
-    }
-
-    private var floatingToolbar: some View {
-        GlassEffectContainer(spacing: 10) {
-            HStack {
-                Button { dismiss() } label: {
-                    Image(systemName: "chevron.left")
-                }
-                .font(.system(size: 15, weight: .semibold))
-                .frame(width: 40, height: 40)
-                .glassEffect(.regular, in: .circle)
-
-                Spacer()
-
-                HStack(spacing: 16) {
-                    Image(systemName: "hand.thumbsup")
-                    Image(systemName: "hand.thumbsdown")
-                    Image(systemName: "square.and.arrow.up")
-                    Image(systemName: "ellipsis")
-                }
-                .font(.system(size: 15, weight: .medium))
-                .padding(.horizontal, 16)
-                .frame(height: 40)
-                .glassEffect(.regular, in: .capsule)
-            }
-        }
-        .padding(.horizontal, 16)
-    }
-
-    private var tabBar: some View {
-        HStack(spacing: 0) {
-            ForEach(["newspaper.fill", "square.stack.fill", "headphones", "star.fill"], id: \.self) { s in
-                Image(systemName: s).frame(maxWidth: .infinity)
-            }
-        }
-        .font(.system(size: 17, weight: .medium))
-        .frame(height: 48)
-        .padding(.horizontal, 8)
-        .glassEffect(.regular, in: .capsule)
-        .padding(.horizontal, 48)
     }
 }
 
@@ -175,11 +184,11 @@ private struct TabBarAutoHideRule: Identifiable {
     let detail: String
 
     static let all: [TabBarAutoHideRule] = [
-        TabBarAutoHideRule(title: "Hide on direction, not position", detail: "Trigger off scroll delta (down = hide, up = show), not a single fixed offset."),
-        TabBarAutoHideRule(title: "Never hide near the top", detail: "Force the bar visible again below a small offset so it doesn't vanish on a page that barely scrolls."),
-        TabBarAutoHideRule(title: "Keep exits and actions separate from the bar", detail: "A floating toolbar for back/share/more shouldn't hide with the tab bar — people need it whether or not they're mid-scroll."),
-        TabBarAutoHideRule(title: "Animate both directions the same way", detail: "Use one snappy animation for hide and reveal so the motion reads as one continuous behavior, not two different ones."),
-        TabBarAutoHideRule(title: "Use the system API when you can", detail: "`.tabBarMinimizeBehavior(.onScrollDown)` on the TabView gets you this for free — hand-roll it only when you need custom triggers."),
+        TabBarAutoHideRule(title: "Reach for tabBarMinimizeBehavior first", detail: "It's one modifier on the TabView — hand-roll scroll tracking only for triggers the system behavior can't express."),
+        TabBarAutoHideRule(title: "Only add a search role if you have one", detail: "Marking a tab role: .search detaches it into its own floating pill next to the main bar — skip it if your app doesn't have a dedicated search tab."),
+        TabBarAutoHideRule(title: "Keep exits and actions separate from the bar", detail: "A toolbar for reactions/share/more shouldn't hide with the tab bar — people need it whether or not they're mid-scroll."),
+        TabBarAutoHideRule(title: "Let adjacent toolbar buttons merge on their own", detail: "Group related actions in one ToolbarItemGroup and the glass pill forms automatically — no GlassEffectContainer needed for ordinary toolbar content."),
+        TabBarAutoHideRule(title: "Prefer .never over fighting the default", detail: "If a screen shouldn't minimize, set tabBarMinimizeBehavior(.never) rather than hiding it yourself with custom state."),
     ]
 }
 

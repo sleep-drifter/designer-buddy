@@ -44,17 +44,11 @@ struct TabBarToolbarTransitionView: View {
                         }
                         if isSelecting {
                             ToolbarItemGroup(placement: .bottomBar) {
-                                Button(role: .destructive) { } label: {
-                                    Label("Delete", systemImage: "trash")
-                                }
+                                Button("Delete", role: .destructive) { }
                                 Spacer()
-                                Button { } label: {
-                                    Label("Move", systemImage: "folder")
-                                }
+                                Button("Move") { }
                                 Spacer()
-                                Button { } label: {
-                                    Label("Share", systemImage: "square.and.arrow.up")
-                                }
+                                Button("Share") { }
                             }
                         }
                     }
@@ -62,7 +56,11 @@ struct TabBarToolbarTransitionView: View {
                     .font(.mono(.caption))
                     .padding(8)
                     .background(.quaternary, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
-                    Text("Wrap the state change in withAnimation and the system animates both halves together — the tab bar slides out as the toolbar's buttons fade in.")
+                    Text("Text-only buttons work fine here — the role: .destructive on "
+                         + "Delete gets its red tint for free, no icon required. Wrap the "
+                         + "state change in withAnimation and the system animates both "
+                         + "halves together: the tab bar slides out as the toolbar's "
+                         + "buttons fade in.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -130,20 +128,14 @@ private struct SelectionToolbarDemo: View {
             }
             if isSelecting {
                 ToolbarItemGroup(placement: .bottomBar) {
-                    Button(role: .destructive) { selected.removeAll() } label: {
-                        Label("Delete", systemImage: "trash")
-                    }
-                    .disabled(selected.isEmpty)
+                    Button("Delete", role: .destructive) { selected.removeAll() }
+                        .disabled(selected.isEmpty)
                     Spacer()
-                    Button { } label: {
-                        Label("Move", systemImage: "folder")
-                    }
-                    .disabled(selected.isEmpty)
+                    Button("Move") { }
+                        .disabled(selected.isEmpty)
                     Spacer()
-                    Button { } label: {
-                        Label("Share", systemImage: "square.and.arrow.up")
-                    }
-                    .disabled(selected.isEmpty)
+                    Button("Share") { }
+                        .disabled(selected.isEmpty)
                 }
             }
         }
