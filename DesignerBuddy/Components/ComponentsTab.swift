@@ -101,6 +101,7 @@ struct AppEntry: Identifiable, Hashable {
         // Navigation & Flows
         .init(name: "Navigation Patterns",   section: "Navigation & Flows", tab: "Patterns & System", icon: "arrow.triangle.turn.up.right.diamond"),
         .init(name: "Tab Bar Patterns",      section: "Navigation & Flows", tab: "Patterns & System", icon: "rectangle.bottomthird.inset.filled"),
+        .init(name: "Tab Bar → Toolbar",     section: "Navigation & Flows", tab: "Patterns & System", icon: "arrow.left.arrow.right.square", keywords: ["tab bar", "toolbar", "transition", "select", "edit mode", "bottombar", "hidden", "swap", "morph", "selection", "photos", "files", "notes", "mail"], updated: "2026-09-09"),
         .init(name: "Modal Patterns",        section: "Navigation & Flows", tab: "Patterns & System", icon: "rectangle.topthird.inset.filled", keywords: ["modal", "sheet", "full screen cover", "confirmation dialog", "alert", "multi-step", "sheet flow", "wizard"]),
         // Content States
         .init(name: "Empty States",          section: "Content States",     tab: "Patterns & System", icon: "tray"),
@@ -196,6 +197,7 @@ struct AppEntry: Identifiable, Hashable {
         .init(name: "Sheet Detent Morph",    section: "Playgrounds", tab: "Playgrounds", icon: "inset.filled.bottomhalf.rectangle", keywords: ["glass", "liquid glass", "sheet", "detent", "bottom sheet", "grabber", "modal", "morph", "button", "present", "dismiss", "drag", "glasseffectid", "ios 26"], updated: "2026-07-25"),
         .init(name: "Tab Mini Player",       section: "Playgrounds", tab: "Playgrounds", icon: "play.square.stack",       keywords: ["glass", "liquid glass", "tab bar", "mini player", "now playing", "music", "pill", "card", "tear", "drag", "scrub", "morph", "glasseffectcontainer", "ios 26"], updated: "2026-07-25"),
         .init(name: "Toolbar Condense",      section: "Playgrounds", tab: "Playgrounds", icon: "menubar.rectangle",       keywords: ["glass", "liquid glass", "toolbar", "nav bar", "condense", "collapse", "scroll", "pill", "merge", "onscrollgeometrychange", "momentum", "morph", "ios 26"], updated: "2026-07-25"),
+        .init(name: "Toolbar Playground",    section: "Playgrounds", tab: "Playgrounds", icon: "rectangle.bottomthird.inset.filled", keywords: ["tab bar", "toolbar", "transition", "select", "edit mode", "bottombar", "hidden", "swap", "morph", "selection", "scrub", "spring", "glass", "ios 26"], updated: "2026-09-09"),
         .init(name: "Text Wrap & Exclusion", section: "Playgrounds", tab: "Playgrounds", icon: "text.below.photo",        keywords: ["exclusion path", "text wrap", "wrap around", "shape outside", "textkit", "nstextcontainer", "magazine", "reflow", "drag", "uitextview"], updated: "2026-07-27"),
         .init(name: "Text Effects",          section: "Playgrounds", tab: "Playgrounds", icon: "wand.and.sparkles",       keywords: ["textrenderer", "text animation", "per glyph", "blur in", "shimmer", "wave", "reveal", "apple intelligence", "run slice", "ios 18", "typewriter", "stagger"], updated: "2026-07-27"),
     ]
